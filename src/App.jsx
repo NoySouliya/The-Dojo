@@ -14,6 +14,7 @@ import Signup from './pages/Signup/Signup';
 import NotFound from './pages/404/NotFound';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
+import OnlineUsers from './components/OnlineUsers';
 
 function App() {
   const { user, authIsReady } = useAuthContext();
@@ -21,7 +22,7 @@ function App() {
     <div className="App">
       {authIsReady && (
         <>
-          <Sidebar />
+          {user && <Sidebar />}
           <div className="container">
             <Navbar />
             <Routes>
@@ -49,6 +50,7 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
+          {user && <OnlineUsers />}
         </>
       )}
     </div>
