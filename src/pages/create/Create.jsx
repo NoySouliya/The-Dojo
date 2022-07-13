@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import { useCollection } from '../../hooks/useCollection';
+import { timestamp } from '../../firebase/config';
+import { useAuthContext } from '../../hooks/useAuthContext';
+import { useFirestore } from '../../hooks/useFirestore';
 
 // styles
 import './Create.css';
@@ -19,9 +23,12 @@ function Create() {
   const [category, setCategory] = useState('');
   const [assignedUsers, setAssignedUsers] = useState([]);
   const [formError, setFormError] = useState(null);
+  let navigate = useNavigate();
 
   const { documents } = useCollection('users');
   const [users, setUsers] = useState([]);
+  const { user } = useAuthContext();
+  const { addDocument, response } = useFirestore('project');
 
   // loop document to give users value and label
   useEffect(() => {
@@ -36,7 +43,7 @@ function Create() {
     }
   }, [documents]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError(null);
     // for category
@@ -49,7 +56,35 @@ function Create() {
       setFormError('Please assign the project to at least one user');
       return;
     }
-    console.log(name, details, dueDate, category.value, assignedUsers);
+
+    const createdBy = {
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+      id: user.uid,
+    };
+
+    const assignedUsersList = assignedUsers.map((user) => {
+      return {
+        displayName: user.value.displayName,
+        photoURL: user.value.photoURL,
+        id: user.value.id,
+      };
+    });
+
+    const project = {
+      name,
+      details,
+      dueDate: timestamp.fromDate(new Date(dueDate)),
+      category: category.value,
+      comment: [],
+      createdBy,
+      assignedUsersList,
+    };
+
+    await addDocument(project);
+    if (!response.error) {
+      navigate('/');
+    }
   };
 
   return (
